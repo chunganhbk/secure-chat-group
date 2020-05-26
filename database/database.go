@@ -1,32 +1,40 @@
 package database
 
 import (
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"context"
+	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"os"
 )
-
 //database global
-var DB *gorm.DB
+var (
+	Messages *mongo.Collection
+	Users    *mongo.Collection
+	Channels *mongo.Collection
+	Subscription *mongo.Collection
+)
 
-func SetupDB() *gorm.DB {
+
+
+func SetupDB()  {
 
 	//db config vars
-	var dbHost string = os.Getenv("DB_HOST")
-	var dbName string = os.Getenv("DB_NAME")
-	var dbUser string = os.Getenv("DB_USERNAME")
-	var dbPassword string = os.Getenv("DB_PASSWORD")
-	var dbPort string = os.Getenv("DB_PORT")
+	var dbHost string = os.Getenv("DB_MONGO_HOST")
+	var dbName string = os.Getenv("DB_MONGO_DATABASE")
+	clientOptions := options.Client().ApplyURI(dbHost)
 
-	//connect to db
-	db, dbError := gorm.Open("mysql", dbUser+":"+ dbPassword +"@tcp(" + dbHost+ ":"+ dbPort +")/"+ dbName + "?charset=utf8&parseTime=True&loc=Local")
-	if dbError != nil {
-		panic("Failed to connect to database")
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
 	}
+	fmt.Println("Connected to MongoDB!")
+	database := client.Database(dbName)
+	Messages = database.Collection("messages")
+	Users = database.Collection("users")
+	Channels = database.Collection("channels")
+	Subscription = database.Collection("subscriptions")
 
-	//fix for connection timeout
-	//see: https://github.com/go-sql-driver/mysql/issues/257
-	db.DB().SetMaxIdleConns(0)
-
-	return db
 }

@@ -10,13 +10,14 @@ import (
 func main(){
 
 	//Setup database
+	database.SetupDB()
 	//init router
 	port := os.Getenv("PORT")
 	router := NewRouter()
 
 
-	database.DB = database.SetupDB()
-	defer database.DB.Close()
+
+
 
 	//create controller server
 	log.Fatal(http.ListenAndServe(":"+port, router))
