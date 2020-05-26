@@ -1,17 +1,18 @@
 package main
 
 import (
-	"bytes"
+	"github.com/chunganhbk/chat-golang/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
-	"log"
-	"net/http"
-	"time"
 )
 
+type Claims struct {
+	User models.UserSchema
+	jwt.StandardClaims
+}
 type Client struct {
-	hub *Hub
+	hub  *Hub
 	conn *websocket.Conn
-	user *jwt.Claims
+	user *Claims
 	send chan []byte
 }

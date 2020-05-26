@@ -8,21 +8,15 @@ import (
 	"log"
 	"os"
 )
+
 //database global
-var (
-	Messages *mongo.Collection
-	Users    *mongo.Collection
-	Channels *mongo.Collection
-	Subscription *mongo.Collection
-)
+var Site *mongo.Collection
 
-
-
-func SetupDB()  {
+func SetupDB() {
 
 	//db config vars
 	var dbHost string = os.Getenv("DB_MONGO_HOST")
-	var dbName string = os.Getenv("DB_MONGO_DATABASE")
+	var dbMaster string = os.Getenv("DB_MONGO_MASTER")
 	clientOptions := options.Client().ApplyURI(dbHost)
 
 	// Connect to MongoDB
@@ -31,10 +25,9 @@ func SetupDB()  {
 		log.Fatal(err)
 	}
 	fmt.Println("Connected to MongoDB!")
-	database := client.Database(dbName)
-	Messages = database.Collection("messages")
-	Users = database.Collection("users")
-	Channels = database.Collection("channels")
-	Subscription = database.Collection("subscriptions")
-
+	database := client.Database(dbMaster)
+	Site = database.Collection("sites")
+	//Users = database.Collection("users")
+	//Channels = database.Collection("channels")
+	//Subscription = database.Collection("subscriptions")
 }

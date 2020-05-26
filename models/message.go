@@ -6,8 +6,8 @@ import (
 )
 
 type MessageSchema struct {
-	ID primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
-	ChannelID primitive.ObjectID
+	ID        primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
+	ChannelID primitive.ObjectID `bson:"channel_id"`
 	Timestamp time.Time
 	Encrypted string
 }
