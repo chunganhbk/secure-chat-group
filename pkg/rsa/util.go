@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"github.com/sirupsen/logrus"
-	"log"
 )
 
 // GenerateKeyPair generates a new key pair
@@ -73,7 +72,7 @@ func BytesToPublicKey(pub []byte, logger  *logrus.Logger) *rsa.PublicKey {
 	b := block.Bytes
 	var err error
 	if enc {
-		log.Println("is encrypted pem block")
+		logger.Println("is encrypted pem block")
 		b, err = x509.DecryptPEMBlock(block, nil)
 		if err != nil {
 			logger.Error(err)
