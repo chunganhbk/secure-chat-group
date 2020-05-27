@@ -6,5 +6,6 @@ type ChannelSchema struct {
 	ID primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
 	Name string
 	PrivateKeys map[string]string // [userID]: Channels symmetric AES key is encrypted with the select users public key
+	IsSecure bool  `bson:"is_secure"`
 	UserMap map[string]string
 }

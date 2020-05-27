@@ -1,8 +1,9 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/chunganhbk/chat-golang/typing"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -16,7 +17,7 @@ type Hub struct {
 }
 
 type CreatedMessageStruct struct {
-	message *WebsocketMessageType
+	message *typing.WebsocketMessageType
 	clients *[]string // user ids
 }
 
@@ -41,7 +42,7 @@ type OFFER struct {
 	ChannelName string
 	SignalData  interface{}
 }
-func newHub() *Hub {
+func NewHub() *Hub {
 	return &Hub{
 		createMessage:  make(chan CreatedMessageStruct),
 		receive: make(chan []byte),
@@ -51,7 +52,7 @@ func newHub() *Hub {
 		clientMap: make(map[string]*Client),
 	}
 }
-func (h *Hub) run() {
+func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
@@ -100,7 +101,7 @@ func handleReceive(h *Hub, message []byte) {
 
 		mapstructure.Decode(parsed.Content, &content)
 
-		message := WebsocketMessageType{"IS_TYPING", &content}
+		message := typing.WebsocketMessageType{MessageType: "IS_TYPING", MessageContent: &content}
 
 		clientsCopy := content.Users[:]
 
@@ -114,7 +115,7 @@ func handleReceive(h *Hub, message []byte) {
 
 		mapstructure.Decode(parsed.Content, &content)
 
-		message := WebsocketMessageType{"OFFER", &content}
+		message := typing.WebsocketMessageType{MessageType: "OFFER", MessageContent: &content}
 
 		clientsCopy := content.Users[:]
 
@@ -128,7 +129,7 @@ func handleReceive(h *Hub, message []byte) {
 
 		mapstructure.Decode(parsed.Content, &content)
 
-		message := WebsocketMessageType{"ANSWER", &content}
+		message := typing.WebsocketMessageType{MessageType: "ANSWER", MessageContent: &content}
 
 		clientsCopy := content.Users[:]
 

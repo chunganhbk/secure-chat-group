@@ -2,32 +2,66 @@ package database
 
 import (
 	"context"
-	"fmt"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 	"os"
+	"sync"
 )
+type MongoDataStore struct {
+	DBMaster      *mongo.Database
+	Session *mongo.Client
+	logger  *logrus.Logger
+}
+const CONNECTED = "Successfully connected to database: %v"
 
-//database global
-var Site *mongo.Collection
+func NewDataStore(logger *logrus.Logger) *MongoDataStore {
 
-func SetupDB() {
+	var mongoDataStore *MongoDataStore
+	db, session := connect( logger)
+	if db != nil && session != nil {
 
-	//db config vars
+		// log statements here as well
+		mongoDataStore = new(MongoDataStore)
+		mongoDataStore.DBMaster = db
+		mongoDataStore.logger = logger
+		mongoDataStore.Session = session
+		return mongoDataStore
+	}
+
+	logger.Fatalf("Failed to connect to database master")
+
+	return nil
+}
+
+func connect(logger *logrus.Logger) (a *mongo.Database, b *mongo.Client) {
+	var connectOnce sync.Once
+	var db *mongo.Database
+	var session *mongo.Client
+	connectOnce.Do(func() {
+		db, session = connectToMongo(logger)
+	})
+
+	return db, session
+}
+
+func connectToMongo(logger *logrus.Logger) (a *mongo.Database, b *mongo.Client) {
+
+	var err error
 	var dbHost string = os.Getenv("DB_MONGO_HOST")
 	var dbMaster string = os.Getenv("DB_MONGO_MASTER")
 	clientOptions := options.Client().ApplyURI(dbHost)
-
-	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+	session, err := mongo.NewClient(clientOptions)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
-	fmt.Println("Connected to MongoDB!")
-	database := client.Database(dbMaster)
-	Site = database.Collection("sites")
-	//Users = database.Collection("users")
-	//Channels = database.Collection("channels")
-	//Subscription = database.Collection("subscriptions")
+	session.Connect(context.TODO())
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	var DB = session.Database(dbMaster)
+	logger.Info(CONNECTED, dbMaster)
+
+	return DB, session
 }

@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"context"
-	"github.com/chunganhbk/chat-golang/database"
 	"github.com/chunganhbk/chat-golang/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"strings"
 )
@@ -27,7 +27,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-func VerifySiteMiddleware() gin.HandlerFunc {
+func VerifySiteMiddleware(db *mongo.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		secretKey := c.Request.Header.Get("Secret-Key")
 		if len(secretKey) == 0 {
@@ -35,7 +35,7 @@ func VerifySiteMiddleware() gin.HandlerFunc {
 			return
 		}
 		var site models.SiteSchema
-		err := database.Site.FindOne(context.TODO(), bson.M{"secret": secretKey}).Decode(&site)
+		err := db.Collection("sites").FindOne(context.TODO(), bson.M{"secret": secretKey}).Decode(&site)
 		if err != nil {
 			c.JSON(500, gin.H{"message": "Could not query messages", "err": err})
 			return
