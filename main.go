@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 )
+
 var (
 	HubGlob *handlers.Hub
 )
@@ -20,10 +21,10 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	//Setup database
-	database.NewDataStore(log)
+	var dataStore = database.NewDataStore(log)
 	//init router
 	r := gin.Default()
-	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.VerifySiteMiddleware(dataStore))
 	HubGlob = handlers.NewHub()
 	go HubGlob.Run()
 
@@ -31,9 +32,9 @@ func main() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
-	api := r.Group("/api/v1")
+	api := r.Group("/api/v1").Use(middleware.CORSMiddleware())
 	{
-
+		api.POST("/channel", handlers.CreateChannelRoute)
 	}
 
 	port := os.Getenv("PORT")

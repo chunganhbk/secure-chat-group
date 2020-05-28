@@ -8,12 +8,12 @@ import (
 )
 
 type Hub struct {
-	clients map[*Client]bool
-	clientMap map[string]*Client // user [user id] to Client
-	receive chan []byte
+	clients       map[*Client]bool
+	clientMap     map[string]*Client // user [user id] to Client
+	receive       chan []byte
 	createMessage chan CreatedMessageStruct
-	register chan *Client
-	unregister chan *Client
+	register      chan *Client
+	unregister    chan *Client
 }
 
 type CreatedMessageStruct struct {
@@ -22,14 +22,14 @@ type CreatedMessageStruct struct {
 }
 
 type MESSAGE struct {
-	Type string
+	Type    string
 	Content map[string]interface{}
 }
 
 type IsTyping struct {
-	GroupID string
-	Users []string
-	WhoTypingID string
+	ChannelID         string
+	Users             []string
+	WhoTypingID       string
 	WhoTypingUsername string
 }
 
@@ -42,14 +42,15 @@ type OFFER struct {
 	ChannelName string
 	SignalData  interface{}
 }
+
 func NewHub() *Hub {
 	return &Hub{
-		createMessage:  make(chan CreatedMessageStruct),
-		receive: make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		clients:    make(map[*Client]bool),
-		clientMap: make(map[string]*Client),
+		createMessage: make(chan CreatedMessageStruct),
+		receive:       make(chan []byte),
+		register:      make(chan *Client),
+		unregister:    make(chan *Client),
+		clients:       make(map[*Client]bool),
+		clientMap:     make(map[string]*Client),
 	}
 }
 func (h *Hub) Run() {
@@ -65,7 +66,7 @@ func (h *Hub) Run() {
 				fmt.Println(client.send)
 				close(client.send)
 			}
-		case message := <- h.receive:
+		case message := <-h.receive:
 			handleReceive(h, message)
 		case message := <-h.createMessage:
 			bytes, err := json.Marshal(message.message)
@@ -77,7 +78,7 @@ func (h *Hub) Run() {
 
 			for _, client := range *message.clients {
 				var connection = h.clientMap[client]
-				if connection!= nil {
+				if connection != nil {
 					select {
 					case connection.send <- bytes:
 					default:

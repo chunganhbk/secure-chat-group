@@ -9,13 +9,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
 type CreateType struct {
-	Name string
+	Name        string
 	PrivateKeys map[string]string
-	UserMap map[string]string
+	UserMap     map[string]string
 }
 
-func CreateChannelRoute(client *mongo.Client, c *gin.Context) {
+func CreateChannelRoute(c *gin.Context) {
 	var form CreateType
 	c.BindJSON(&form)
 
@@ -28,7 +29,7 @@ func CreateChannelRoute(client *mongo.Client, c *gin.Context) {
 		c.JSON(400, gin.H{"message": "You must send a map of the user_ids and usernames"})
 		return
 	}
-	if len(form.PrivateKeys)  == 0 {
+	if len(form.PrivateKeys) == 0 {
 		IsSecure = false
 	}
 
@@ -40,9 +41,10 @@ func CreateChannelRoute(client *mongo.Client, c *gin.Context) {
 		var HubGlob *Hub
 		clients := make([]string, 0)
 		clients = append(clients, newChannel.ID.String())
-		HubGlob.createMessage <- CreatedMessageStruct{message:&message, clients: &clients}
+		HubGlob.createMessage <- CreatedMessageStruct{message: &message, clients: &clients}
 	})()
-	var Channels = getCollection("channels", client, c)
+	db := c.MustGet("DB").(*mongo.Database)
+	var Channels = db.Collection("channels")
 	_, err := Channels.InsertOne(context.TODO(), newChannel)
 	if err != nil {
 		fmt.Println("Fatal error while creating channel:", err)
@@ -52,9 +54,4 @@ func CreateChannelRoute(client *mongo.Client, c *gin.Context) {
 
 	c.JSON(200, gin.H{"message": "Channel has been created", "data": newChannel})
 
-}
-func getCollection(collectionName string, client *mongo.Client, c *gin.Context)  *mongo.Collection{
-	var DBName = c.GetString("db_name")
-	database := client.Database(DBName)
-	return database.Collection(collectionName)
 }
